@@ -23,12 +23,12 @@ MAIN_MENU = ReplyKeyboardMarkup(MAIN_MENU_KEYBOARD, resize_keyboard=True)
 async def small_hunt(context: ContextTypes.DEFAULT_TYPE):
     chat_id = context.job.data['chat_id']
     await context.bot.send_message(chat_id=chat_id, text="🐾 Time's up! Let's go smallHUNT!")
-    context.job_queue.run_once(small_hunt, when=2 * 3600, data={'chat_id': chat_id})
+    context.job_queue.run_once(small_hunt, when=2 * 3600, data={'chat_id': chat_id}, name=f"small_hunt_{chat_id}")
 
 async def big_hunt(context: ContextTypes.DEFAULT_TYPE):
     chat_id = context.job.data['chat_id']
     await context.bot.send_message(chat_id=chat_id, text="🦌 Time's up! Let's go bigHUNT!")
-    context.job_queue.run_once(big_hunt, when=8 * 3600, data={'chat_id': chat_id})
+    context.job_queue.run_once(big_hunt, when=8 * 3600, data={'chat_id': chat_id}, name=f"big_hunt_{chat_id}")
 
 # Handlers for actions
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -36,13 +36,13 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
     if text == "🐾 Small Hunt (2h)":
-        context.job_queue.run_once(small_hunt, when=2 * 3600, data={'chat_id': chat_id})
+        context.job_queue.run_once(small_hunt, when=2 * 3600, data={'chat_id': chat_id}, name=f"small_hunt_{chat_id}")
         await update.message.reply_text("Small Hunt timer set for 2 hours! 🐾", reply_markup=MAIN_MENU)
     elif text == "🦌 Big Hunt (8h)":
-        context.job_queue.run_once(big_hunt, when=8 * 3600, data={'chat_id': chat_id})
+        context.job_queue.run_once(big_hunt, when=8 * 3600, data={'chat_id': chat_id}, name=f"big_hunt_{chat_id}")
         await update.message.reply_text("Big Hunt timer set for 8 hours! 🦌", reply_markup=MAIN_MENU)
     elif text == "⏹ Stop Timers":
-        current_jobs = context.job_queue.get_jobs_by_name(str(chat_id))
+        current_jobs = context.job_queue.get_jobs_by_name(f"small_hunt_{chat_id}") + context.job_queue.get_jobs_by_name(f"big_hunt_{chat_id}")
         for job in current_jobs:
             job.schedule_removal()
         await update.message.reply_text("All active timers have been stopped! ⏹", reply_markup=MAIN_MENU)
